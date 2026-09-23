@@ -41,10 +41,10 @@ services.
 | | |
 |---|---|
 | **Host OS** | Linux with **Hyprland** (Wayland). Other compositors are not supported yet; PRs welcome. |
-| **Packages** | Rust, Node.js 18+, GStreamer (base, good, bad, PipeWire), PipeWire, `xdg-desktop-portal-hyprland`, `wl-clipboard`, `libnotify`, `cloudflared`, `curl` |
+| **Packages** | Rust 1.85+ ([rustup](https://rustup.rs)), a C toolchain + `pkg-config` + `cmake`, Node.js 18+, GStreamer (base, good, bad, PipeWire), PipeWire, `xdg-desktop-portal-hyprland`, `wl-clipboard`, `libnotify`, `cloudflared`, `curl` |
 | **Encoder** | NVIDIA: nothing extra. AMD/Intel: `gst-plugin-va` + a VA-API driver. No GPU: `gst-plugins-ugly` (x264). |
 | **Cloudflare** | A free account with a domain (zone) on Cloudflare, and Zero Trust on the free plan |
-| **Browser** | Recent Chrome, Edge, Brave or Firefox on the device you connect from |
+| **Browser** | Recent Chrome, Edge, Brave or Firefox on the device you connect from (fullscreen key capture needs a Chromium-based browser) |
 
 ## Setup
 
@@ -64,7 +64,7 @@ The helper walks you through everything and can be re-run safely:
 6. **Guides you through the Access application** in the dashboard (about 2 minutes). Then it creates the DNS record and **checks that Access is protecting the hostname** before anything is started. It reads the team domain and AUD tag automatically.
 7. **Optionally takes a TURN key** for strict networks.
 8. **Creates your login**: a password, plus a QR code for your authenticator app.
-9. **Installs and starts** the `desk-agent` and `desk-tunnel` systemd user services.
+9. **Installs and starts** the `desk-agent` and `desk-tunnel` systemd user services, and adds a hook so Hyprland starts the agent at every login.
 
 Then open `https://your-hostname`, enter your email and the code Cloudflare sends you, then your
 password and authenticator code.
@@ -73,6 +73,11 @@ password and authenticator code.
 
 If you'd rather do it by hand, read `scripts/setup.sh`. It is plain bash and every step is
 commented. The config file format is documented in [`agent/config.example.toml`](agent/config.example.toml).
+
+> [!NOTE]
+> desk streams your **logged-in** Hyprland session. After a reboot, nothing can be shown until
+> someone logs in, so if you want access after reboots, enable autologin in your display manager
+> (or greetd) and lock the screen with your usual locker.
 
 ## Using it
 
@@ -131,8 +136,9 @@ On typical personal use it's free:
 
 ## Status
 
-Built and used daily on Arch Linux + Hyprland + NVIDIA. **The VA-API and x264 encoder paths are
-implemented but not yet tested on real AMD/Intel hardware.** Reports and fixes are welcome.
+Built and used daily on Arch Linux + Hyprland + NVIDIA, tested with Chrome and Firefox.
+**The VA-API and x264 encoder paths are implemented but not yet tested on real AMD/Intel hardware,
+and `setup.sh` has not yet been run on a fresh non-Arch install.** Reports and fixes are welcome.
 
 Roadmap: gaming mode (pointer lock, relative mouse, gamepads), file transfer, touch input, and
 more compositors (GNOME/KDE through the RemoteDesktop portal).

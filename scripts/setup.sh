@@ -37,13 +37,24 @@ step "1/9  Checking requirements"
 ok "Hyprland session"
 
 missing=()
-for bin in cargo node npm cloudflared curl gst-inspect-1.0 wl-copy wl-paste notify-send hyprctl systemctl; do
+for bin in cargo node npm cloudflared curl pkg-config cc gst-inspect-1.0 wl-copy wl-paste notify-send hyprctl systemctl; do
   command -v "$bin" >/dev/null 2>&1 && ok "$bin" || missing+=("$bin")
 done
+if command -v rustc >/dev/null 2>&1; then
+  RUST_MINOR="$(rustc --version | sed -E 's/rustc 1\.([0-9]+).*/\1/')"
+  if ((RUST_MINOR < 85)); then
+    missing+=("rust>=1.85")
+    warn "rustc $(rustc --version | cut -d' ' -f2) is too old; install a current toolchain with https://rustup.rs"
+  fi
+fi
+if command -v node >/dev/null 2>&1 && (( $(node -p 'process.versions.node.split(".")[0]') < 18 )); then
+  missing+=("node>=18")
+fi
 for el in pipewiresrc pulsesrc opusenc h264parse videoconvert; do
   gst-inspect-1.0 "$el" >/dev/null 2>&1 && ok "GStreamer $el" || missing+=("gstreamer:$el")
 done
-[[ -e /usr/lib/xdg-desktop-portal-hyprland || -n "$(command -v xdg-desktop-portal-hyprland 2>/dev/null)" ]] \
+[[ -e /usr/lib/xdg-desktop-portal-hyprland || -e /usr/libexec/xdg-desktop-portal-hyprland \
+   || -n "$(command -v xdg-desktop-portal-hyprland 2>/dev/null)" ]] \
   && ok "xdg-desktop-portal-hyprland" || missing+=("xdg-desktop-portal-hyprland")
 
 if ((${#missing[@]})); then
@@ -51,13 +62,14 @@ if ((${#missing[@]})); then
   warn "Missing: ${missing[*]}"
   cat <<'EOF'
 
-  Arch:          sudo pacman -S --needed rust nodejs npm cloudflared curl wl-clipboard libnotify \
-                   gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugin-pipewire \
-                   xdg-desktop-portal-hyprland
-  Debian/Ubuntu: sudo apt install cargo nodejs npm curl wl-clipboard libnotify-bin \
+  Arch:          sudo pacman -S --needed base-devel pkgconf cmake rustup nodejs npm cloudflared curl \
+                   wl-clipboard libnotify gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad \
+                   gst-plugin-pipewire xdg-desktop-portal-hyprland && rustup default stable
+  Debian/Ubuntu: sudo apt install build-essential pkg-config cmake nodejs npm curl wl-clipboard libnotify-bin \
                    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-{base,good,bad} \
                    gstreamer1.0-pipewire gstreamer1.0-pulseaudio
-                 (cloudflared: https://pkg.cloudflare.com)
+                 Rust 1.85+: https://rustup.rs (distro cargo is often too old)
+                 cloudflared: https://pkg.cloudflare.com
   Encoders:      NVIDIA works out of the box (gst-plugins-bad nvcodec).
                  AMD/Intel: install gst-plugin-va (Arch) / gstreamer1.0-plugins-bad + VA driver.
                  No GPU encoder: install gst-plugins-ugly (x264enc).
@@ -270,12 +282,29 @@ for unit in desk-agent desk-tunnel; do
     "$REPO/deploy/$unit.service.in" > "$UNIT_DIR/$unit.service"
 done
 systemctl --user daemon-reload
-systemctl --user enable --now desk-agent.service desk-tunnel.service >/dev/null
+systemctl --user enable --now desk-tunnel.service >/dev/null
+systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_RUNTIME_DIR
+systemctl --user restart desk-agent.service
+
+# desk-agent needs the running Hyprland session, so Hyprland starts it at every login.
+HOOK_CMD='systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_RUNTIME_DIR && systemctl --user restart desk-agent'
+HYPR_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+if grep -rqs 'restart desk-agent' "$HYPR_DIR"; then
+  ok "Hyprland already starts desk-agent at login"
+elif [[ -f "$HYPR_DIR/hyprland.lua" ]]; then
+  warn "Your Hyprland uses a Lua config. Add this inside your hl.on(\"hyprland.start\", …) handler:"
+  echo "    hl.exec_cmd(\"$HOOK_CMD\")"
+  read -r -p "  Press Enter once added… " _
+else
+  cp "$HYPR_DIR/hyprland.conf" "$HYPR_DIR/hyprland.conf.bak.$(date +%s)"
+  printf '\n# desk: start the remote-desktop agent with this session'"'"'s environment\nexec-once = %s\n' "$HOOK_CMD" >> "$HYPR_DIR/hyprland.conf"
+  ok "added exec-once to $HYPR_DIR/hyprland.conf"
+fi
 sleep 4
 systemctl --user is-active --quiet desk-agent && ok "desk-agent running" || die "desk-agent failed: journalctl --user -u desk-agent"
 systemctl --user is-active --quiet desk-tunnel && ok "desk-tunnel running" || die "desk-tunnel failed: journalctl --user -u desk-tunnel"
 
-if [[ "$(loginctl show-user "$USER" -p Linger --value 2>/dev/null)" != yes ]] && confirm "Keep desk running after you log out / start it at boot (enable linger)?"; then
+if [[ "$(loginctl show-user "$USER" -p Linger --value 2>/dev/null)" != yes ]] && confirm "Start the tunnel at boot, before you log in (enable linger)?"; then
   loginctl enable-linger "$USER" && ok "linger enabled"
 fi
 
@@ -288,3 +317,6 @@ bold "Done. Open https://$HOST"
 echo "  1. Enter your email → Cloudflare emails you a code."
 echo "  2. Enter your desk password + authenticator code."
 echo "  Logs: journalctl --user -u desk-agent -f"
+echo
+echo "  Note: desk can only stream a logged-in Hyprland session. For access after a reboot,"
+echo "  enable autologin in your display manager (or greetd) so Hyprland starts on boot."

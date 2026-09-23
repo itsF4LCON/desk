@@ -1,7 +1,8 @@
 [Unit]
 Description=desk agent (browser remote desktop)
-After=graphical-session.target pipewire.service
-PartOf=graphical-session.target
+After=pipewire.service
+# Started by Hyprland at login (setup.sh adds the hook): it needs the session's
+# Wayland/Hyprland environment, which only exists once you are logged in.
 
 [Service]
 WorkingDirectory=@REPO@/agent
@@ -10,6 +11,3 @@ Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
 PrivateTmp=true
-
-[Install]
-WantedBy=graphical-session.target
