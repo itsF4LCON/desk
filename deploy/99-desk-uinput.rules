@@ -1,0 +1,3 @@
+# Lets the logged-in (active seat) user create virtual input devices, which desk needs to
+# inject the remote mouse and keyboard. Install to /etc/udev/rules.d/ (scripts/setup.sh offers to).
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"

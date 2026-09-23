@@ -1,0 +1,6 @@
+agent/target/
+agent/config.toml
+agent/state/
+web/node_modules/
+web/dist/
+*.png.tmp

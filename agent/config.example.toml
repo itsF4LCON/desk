@@ -1,0 +1,28 @@
+# desk-agent configuration. scripts/setup.sh writes this for you to ~/.config/desk/config.toml.
+
+# Loopback only: the Cloudflare Tunnel is the only way in.
+listen = "127.0.0.1:8750"
+# Public URL you open in the browser (no path, no trailing slash).
+public_origin = "https://desk.example.com"
+# Where the password hash, TOTP secret and screen-share restore tokens are stored (mode 0600).
+state_dir = "/home/you/.local/share/desk/state"
+# Built web client (web/dist in this repo).
+web_dir = "/home/you/desk/web/dist"
+
+# H.264 encoder: "auto" probes NVIDIA NVENC → VA-API (AMD/Intel) → x264 (software).
+encoder = "auto"
+# Local UDP port for media; 0 = random.
+udp_port = 0
+
+[access]
+# Cloudflare Zero Trust team domain and the Access application's AUD tag.
+team_domain = "yourteam.cloudflareaccess.com"
+aud = "PASTE_APPLICATION_AUDIENCE_AUD_TAG"
+# The only identity allowed in (must match the Access policy).
+allowed_email = "you@example.com"
+
+# Optional: Cloudflare Realtime TURN key. Lets you connect from networks that block direct UDP.
+# Create one under Realtime → TURN Server in the Cloudflare dashboard.
+# [turn]
+# key_id = ""
+# api_token = ""

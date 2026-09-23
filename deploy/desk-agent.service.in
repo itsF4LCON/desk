@@ -1,0 +1,15 @@
+[Unit]
+Description=desk agent (browser remote desktop)
+After=graphical-session.target pipewire.service
+PartOf=graphical-session.target
+
+[Service]
+WorkingDirectory=@REPO@/agent
+ExecStart=@REPO@/agent/target/release/desk-agent serve --config @CONFIG@
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=Cloudflare Tunnel for desk
+After=network-online.target desk-agent.service
+Wants=network-online.target
+
+[Service]
+ExecStart=@CLOUDFLARED@ tunnel --no-autoupdate --config @CF_CONFIG@ run
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

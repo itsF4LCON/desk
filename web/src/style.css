@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@source "./index.html";
+@source "./app.ts";
+
+/* Design tokens: warm paper, black surfaces, square corners, Inter + JetBrains Mono. */
+@theme {
+  --color-black: #000000;
+  --color-paper: #edeae2;
+  --color-surface: #f5f1e8;
+  --color-card: #fffaf0;
+  --color-border: #c8c0b3;
+  --color-borderHover: #000000;
+  --color-heading: #000000;
+  --color-body: #24211d;
+  --color-muted: #5d574e;
+
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Inter", sans-serif;
+}
+
+@font-face { font-family: "Inter"; font-weight: 300; font-display: swap; src: url("fonts/inter-300.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url("fonts/inter-400.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 500; font-display: swap; src: url("fonts/inter-500.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 600; font-display: swap; src: url("fonts/inter-600.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; font-display: swap; src: url("fonts/jetbrains-mono-400.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 500; font-display: swap; src: url("fonts/jetbrains-mono-500.woff2") format("woff2"); }
+
+body {
+  background-color: #edeae2;
+  color: #000000;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Black "dark-surface" blocks, as on the portfolio. */
+.dark-surface { background-color: #000000; color: #ffffff; }
+.dark-surface .text-heading { color: #ffffff; }
+.dark-surface .text-body { color: #d6d3d1; }
+.dark-surface .text-muted { color: #a8a29e; }
+.dark-surface .bg-muted { background-color: #a8a29e; }
+.dark-surface .border-border { border-color: #3a3631; }
+.dark-surface .hover\:text-heading:hover { color: #ffffff; }
+.dark-surface .hover\:border-borderHover:hover { border-color: #ffffff; }
+
+.hidden-view { display: none !important; }
+video:focus { outline: none; }

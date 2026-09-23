@@ -1,0 +1,14 @@
+#!/bin/sh
+# Screen-share picker wrapper for xdg-desktop-portal-hyprland (installed by desk scripts/setup.sh).
+# If desk-agent left a one-shot request naming a monitor, answer the portal with it
+# (allowing a restore token). Otherwise fall back to the normal interactive picker.
+req="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/desk-agent/pick"
+if [ -f "$req" ] && [ "$(stat -c %u "$req")" = "$(id -u)" ]; then
+    mon=$(head -c 64 "$req" | tr -cd 'A-Za-z0-9_.-')
+    rm -f "$req"
+    if [ -n "$mon" ]; then
+        echo "[SELECTION]r/screen:$mon"
+        exit 0
+    fi
+fi
+exec hyprland-share-picker "$@"

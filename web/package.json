@@ -1,0 +1,19 @@
+{
+  "name": "desk-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@tailwindcss/cli": "^4.3.3",
+    "esbuild": "^0.28.2",
+    "lucide": "^1.47.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2"
+  },
+  "license": "MIT"
+}
